@@ -44,14 +44,14 @@ def exp_start(Hill_Climbing_K):
     order_sched = {'sup': supply_schedule, 'dem': demand_schedule,
                 'interval': order_interval, 'timemode': 'periodic'}
 
-    trial_id = 'test_m4_k' + str(Hill_Climbing_K)
+    trial_id = 'best_m4_0.14_k' + str(Hill_Climbing_K)
 
 
-    n_runs(150, trial_id, start_time, end_time, traders_spec, order_sched)
+    n_runs(200, trial_id, start_time, end_time, traders_spec, order_sched)
     print(Hill_Climbing_K, " ended")
 
 
-Hill_Climbing_K = range(2,21,2)
+Hill_Climbing_K = range(2,19,2)
 if __name__ == "__main__":
     process_list = []
     for k in Hill_Climbing_K:

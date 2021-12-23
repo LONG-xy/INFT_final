@@ -1307,9 +1307,9 @@ class Trader_PRZI_SHC_M(Trader):
             if i%4 == 1:
                 newstrat = s + random.uniform(0, 0.05)
             elif i%4 == 2:
-                newstrat = s - random.uniform(0, 0.05)
-            elif i%4 == 3:
                 newstrat = s + random.uniform(0.05, 0.15)
+            elif i%4 == 3:
+                newstrat = s - random.uniform(0, 0.05)
             elif i%4 == 0:
                 newstrat = s - random.uniform(0.05, 0.15)
             newstrat = max(-1.0, min(1.0, newstrat))
@@ -1317,7 +1317,22 @@ class Trader_PRZI_SHC_M(Trader):
                 break
         return newstrat
 
-    def mutate_strat_4(self, s,pre,i):
+    def mutate_strat_4(self, s, i):
+        #interval = 0.08
+        #interval = 0.05
+        interval = 0.14
+        newstrat = s
+        while newstrat == s:
+            if i % 2 == 1:
+                newstrat = s + random.uniform(int((i+1)/2-1)*interval, int((i+1)/2)*interval)
+            else:
+                newstrat = s - random.uniform(int((i+1)/2-1)*interval, int((i+1)/2)*interval)
+            newstrat = max(-1.0, min(1.0, newstrat))
+            if (abs(newstrat) == 1):
+                break
+        return newstrat
+
+    def mutate_strat_5(self, s,pre,i):
             pre_upper_bound = pre
             newstrat = s
             while newstrat == s:
@@ -1332,18 +1347,7 @@ class Trader_PRZI_SHC_M(Trader):
                     break
             return newstrat
 
-    def mutate_strat_5(self, s, i):
-        interval = 0.08
-        newstrat = s
-        while newstrat == s:
-            if i % 2 == 1:
-                newstrat = s + random.uniform(int((i+1)/2-1)*interval, int((i+1)/2)*interval)
-            else:
-                newstrat = s - random.uniform(int((i+1)/2-1)*interval, int((i+1)/2)*interval)
-            newstrat = max(-1.0, min(1.0, newstrat))
-            if (abs(newstrat) == 1):
-                break
-        return newstrat
+
     
 
     def strat_str(self):
@@ -1369,8 +1373,8 @@ class Trader_PRZI_SHC_M(Trader):
         self.theta0 = 100           # threshold-function limit value
         self.m = 4                  # tangent-function multiplier
         # modify
-        #self.k = 14           # number of hill-climbing points (cf number of arms on a multi-armed-bandit)
-        self.k = Hill_Climbing_K
+        self.k = 8          # number of hill-climbing points (cf number of arms on a multi-armed-bandit)
+        #self.k = Hill_Climbing_K
         #!# before 900
         self.strat_wait_time = 100  # how many secs do we give any one strat before switching? 
         
@@ -1401,7 +1405,7 @@ class Trader_PRZI_SHC_M(Trader):
             else:
                 #strategy = self.mutate_strat_4(self.strats[0]['stratval'],i)     # mutant of strats[0]
 
-                strategy = self.mutate_strat_5(self.strats[0]['stratval'],i)     # mutant of strats[0]
+                strategy = self.mutate_strat_4(self.strats[0]['stratval'],i)     # mutant of strats[0]
  #              pre = pre + 0.1
                 # if i%2 ==0:
                 #     pre = pre + 0.02*(i-1)
@@ -1797,7 +1801,7 @@ class Trader_PRZI_SHC_M(Trader):
 
                 # now replicate and mutate elite into all the other strats
                 for i in range(1, self.k):    # note range index starts at one not zero                            
-                    self.strats[i]['stratval'] = self.mutate_strat_5(self.strats[0]['stratval'],i) 
+                    self.strats[i]['stratval'] = self.mutate_strat_4(self.strats[0]['stratval'],i) 
                     # if i%2 ==0:
                     #     pre = pre + 0.02*(i-1)
                     # else: pre = pre

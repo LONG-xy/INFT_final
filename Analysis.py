@@ -10,7 +10,7 @@ df = []
 K = range(2,20,2)
 
 for k in K:
-    data = pd.read_csv('test_m4_k'+str(k)+'_avg_balance.csv',header = None)
+    data = pd.read_csv('best/best_m4_0.14_k'+str(k)+'_avg_balance.csv',header = None)
     data_PRSH = data.iloc[:,7]
     df.append(data_PRSH)
     mean.append(stats.trim_mean(data_PRSH,0.05))
@@ -23,7 +23,7 @@ plt.show()
 plt.xticks(K)
 plt.plot(K,mean)
 plt.scatter(K,mean)
-plt.title("Mutation Function 5")
+plt.title("Best Mutation Function 5")
 plt.xlabel("X")
 plt.ylabel('Profit per trader')
 plt.show()
