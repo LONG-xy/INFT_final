@@ -867,12 +867,14 @@ class Trader_PRZI_SHC(Trader):
             profit_per_second = 0
             lut_bid = None
             lut_ask = None
+            
             if s == 0:
                 strategy = random.uniform(self.strat_range_min, self.strat_range_max)
             else:
                 strategy = self.mutate_strat(self.strats[0]['stratval'])     # mutant of strats[0]
             self.strats.append({'stratval': strategy, 'start_t': start_time,
                                 'profit': profit, 'pps': profit_per_second, 'lut_bid': lut_bid, 'lut_ask': lut_ask})
+
 
         if verbose:
             print("PRSH %s %s\n" % (tid, self.strat_str()))
@@ -1278,8 +1280,7 @@ class Trader_PRZI_SHC(Trader):
     
 
 class Trader_PRZI_SHC_M(Trader):
-
-
+    
     # how to mutate the strategy values when hill-climbing
     def mutate_strat_1(self, s):
         sdev = 0.1
@@ -1299,7 +1300,6 @@ class Trader_PRZI_SHC_M(Trader):
             if (abs(newstrat) == 1):                  
                     break
         return newstrat
-
 
     def mutate_strat_3(self,s,i):
         newstrat = s
@@ -1347,9 +1347,6 @@ class Trader_PRZI_SHC_M(Trader):
                     break
             return newstrat
 
-
-    
-
     def strat_str(self):
         # pretty-print a string summarising this trader's strategies
         string = 'PRSH: %s active_strat=[%d]:\n' % (self.tid, self.active_strat)
@@ -1360,7 +1357,6 @@ class Trader_PRZI_SHC_M(Trader):
             string = string + stratstr
 
         return string
-
 
     def __init__(self, ttype, tid, balance, time):
         # PRZI strategy defined by parameter "strat"
@@ -1403,10 +1399,10 @@ class Trader_PRZI_SHC_M(Trader):
             if i == 0:
                 strategy = random.uniform(self.strat_range_min, self.strat_range_max)
             else:
-                #strategy = self.mutate_strat_4(self.strats[0]['stratval'],i)     # mutant of strats[0]
+                # strategy = self.mutate_strat_4(self.strats[0]['stratval'],i)     # mutant of strats[0]
 
                 strategy = self.mutate_strat_4(self.strats[0]['stratval'],i)     # mutant of strats[0]
- #              pre = pre + 0.1
+                # pre = pre + 0.1
                 # if i%2 ==0:
                 #     pre = pre + 0.02*(i-1)
                 # else: pre = pre
@@ -1417,7 +1413,6 @@ class Trader_PRZI_SHC_M(Trader):
 
         if verbose:
             print("PRSH %s %s\n" % (tid, self.strat_str()))
-
 
     def getorder(self, time, countdown, lob):
 
@@ -1654,7 +1649,6 @@ class Trader_PRZI_SHC_M(Trader):
 
         return order
 
-
     def bookkeep(self, trade, order, verbose, time):
 
         outstr = ""
@@ -1691,7 +1685,6 @@ class Trader_PRZI_SHC_M(Trader):
         # then I want to reset the timer on the current strat and update its profit sum
 
         self.strats[self.active_strat]['profit'] += profit
-
 
     # PRSH respond() asks/answers two questions
     # do we need to choose a new strategy? (i.e. have just completed/cancelled previous customer order)
@@ -1822,26 +1815,51 @@ class Trader_PRZI_SHC_M(Trader):
 
         else:
             sys.exit('FAIL: bad value for shc_algo')
-    
+
+total_trial = 0  
+
 class Trader_PRZI_SHC_Improve(Trader):
 
     # how to mutate the strategy values when hill-climbing   
 
-    def mutate_strat_4(self, s,pre,i):
-            pre_upper_bound = pre
+    def mutate_strat_5(self, s, i):
+        interval = 0.14
+        newstrat = s
+        while newstrat == s:
+            if i % 2 == 1:
+                newstrat = s + random.uniform(int((i+1)/2-1)*interval, int((i+1)/2)*interval)
+            else:
+                newstrat = s - random.uniform(int((i+1)/2-1)*interval, int((i+1)/2)*interval)
+            newstrat = max(-1.0, min(1.0, newstrat))
+            if (abs(newstrat) == 1):
+                break
+        return newstrat
+    
+    def mutate_strat(self,s):
+        sdev = 0.05
+        newstrat = s
+        while newstrat == s:
+                newstrat = s + random.gauss(0.0,sdev)
+                newstrat = max(-1.0, min(1.0, newstrat))
+        return newstrat
+
+    def mutate_strat_arm(self, s, i, epsilon = 0.1):
+        flag = random.uniform(0, 1)
+        if flag < epsilon: # Exploration
+            interval = 0.14
             newstrat = s
             while newstrat == s:
-                if i % 2 != 0:            
-                    range1 = random.uniform(pre_upper_bound, pre_upper_bound + 0.02*i)
-                    newstrat = s + range1
+                if i % 2 == 1:
+                    newstrat = s + random.uniform(int((i+1)/2-1)*interval, int((i+1)/2)*interval)
                 else:
-                    range2 = random.uniform(pre_upper_bound, pre_upper_bound + 0.02*(i-1))
-                    newstrat = s - range2
+                    newstrat = s - random.uniform(int((i+1)/2-1)*interval, int((i+1)/2)*interval)
                 newstrat = max(-1.0, min(1.0, newstrat))
                 if (abs(newstrat) == 1):
                     break
-            return newstrat
-    
+                newstrat = round(newstrat,2)
+        else: # Exploitation
+             newstrat = s
+        return newstrat
 
     def strat_str(self):
         # pretty-print a string summarising this trader's strategies
@@ -1854,7 +1872,6 @@ class Trader_PRZI_SHC_Improve(Trader):
 
         return string
 
-
     def __init__(self, ttype, tid, balance, time):
         # PRZI strategy defined by parameter "strat"
         # here this is randomly assigned
@@ -1866,7 +1883,7 @@ class Trader_PRZI_SHC_Improve(Trader):
         self.theta0 = 100           # threshold-function limit value
         self.m = 4                  # tangent-function multiplier
         # modify
-        self.k = 14           # number of hill-climbing points (cf number of arms on a multi-armed-bandit)
+        self.k = 20           # number of hill-climbing points (cf number of arms on a multi-armed-bandit)
 
         #!# before 900
         self.strat_wait_time = 100  # how many secs do we give any one strat before switching? 
@@ -1882,8 +1899,11 @@ class Trader_PRZI_SHC_Improve(Trader):
         self.strats=[]              # strategies awaiting initialization
         self.pmax = None            # this trader's estimate of the maximum price the market will bear
         self.pmax_c_i = math.sqrt(random.randint(1,10))  # multiplier coefficient when estimating p_max
+
+        self.arms={"total_times":0} # multi_arms
         
         pre = 0
+        global total_trial
 
         for i in range(0, self.k):
             # initialise each of the strategies in sequence
@@ -1894,19 +1914,16 @@ class Trader_PRZI_SHC_Improve(Trader):
             lut_ask = None
 
             if i == 0:
-                strategy = random.uniform(self.strat_range_min, self.strat_range_max)
+                strategy = random.uniform(self.strat_range_min, self.strat_range_max) # init
             else:
                 #strategy = self.mutate_strat_4(self.strats[0]['stratval'],i)     # mutant of strats[0]
-
-                strategy = self.mutate_strat_4(self.strats[0]['stratval'],pre, i)     # mutant of strats[0]
- #              pre = pre + 0.1
-                if i%2 ==0:
-                    pre = pre + 0.02*(i-1)
-                else: pre = pre
+                
+                strategy = self.mutate_strat_5(self.strats[0]['stratval'], i)     # mutant of strats[0]
+                
+     
 
             self.strats.append({'stratval': strategy, 'start_t': start_time,
                                 'profit': profit, 'pps': profit_per_second, 'lut_bid': lut_bid, 'lut_ask': lut_ask})
-
 
         if verbose:
             print("PRSH %s %s\n" % (tid, self.strat_str()))
@@ -2185,14 +2202,13 @@ class Trader_PRZI_SHC_Improve(Trader):
 
         self.strats[self.active_strat]['profit'] += profit
 
-
     # PRSH respond() asks/answers two questions
     # do we need to choose a new strategy? (i.e. have just completed/cancelled previous customer order)
     # do we need to dump one arm and generate a new one? (i.e., both/all arms have been evaluated enough)
 
     def respond(self, time, lob, trade, verbose):
-
-        shc_algo = 'A'
+        global total_trial
+        shc_algo = 'Arms'
 
 
         # "basic" is a very basic form of stochastic hill-cliber (SHC) that v easy to understand and to code
@@ -2206,80 +2222,9 @@ class Trader_PRZI_SHC_Improve(Trader):
         verbose = False
 
         # first update each strategy's profit-per-second value -- this is the "fitness" of each strategy
-        for s in self.strats:
-            pps_time = time - s['start_t']
-            if pps_time > 0:
-                s['pps'] = s['profit'] / pps_time
-            else:
-                s['pps'] = 0.0
-        '''
-        s = self.active_strat
-            time_elapsed = time - self.last_strat_change_time
-            if time_elapsed > self.strat_wait_time:
-                # we have waited long enough: swap to another strategy
 
-                new_strat = s + 1
-                if new_strat > self.k - 1:
-                    new_strat = 0
+        if shc_algo == 'Arms':
 
-                self.active_strat = new_strat
-                self.last_strat_change_time = time
-
-                if verbose:
-                    print('t=%f %s PRSH respond: strat[%d] elapsed=%f; wait_t=%f, switched to strat=%d' %
-                          (time, self.tid, s, time_elapsed, self.strat_wait_time, new_strat))
-
-            # code below here deals with creating a new set of k-1 mutants from the best of the k strats
-
-            for s in self.strats:
-                # assume that all strats have had long enough, and search for evidence to the contrary
-                all_old_enough = True
-                lifetime = time - s['start_t']
-                if lifetime < self.strat_eval_time:
-                    all_old_enough = False
-                    break
-
-            if all_old_enough:
-                # all strategies have had long enough: which has made most profit?
-
-                # sort them by profit
-                strats_sorted = sorted(self.strats, key = lambda k: k['pps'], reverse = True)
-                # strats_sorted = self.strats     # use this as a control: unsorts the strats, gives pure random walk.
-
-                if verbose:
-                    print('PRSH %s: strat_eval_time=%f, all_old_enough=True' % (self.tid, self.strat_eval_time))
-                    for s in strats_sorted:
-                        print('s=%f, start_t=%f, lifetime=%f, $=%f, pps=%f' %
-                              (s['stratval'], s['start_t'], time-s['start_t'], s['profit'], s['pps']))
-
-                # if the difference between the top two strats is too close to call then flip a coin
-                # this is to prevent the same good strat being held constant simply by chance cos it is at index [0]
-                prof_diff = strats_sorted[0]['profit'] - strats_sorted[1]['profit']
-                if abs(prof_diff) < self.profit_epsilon:
-                    # they're too close to call, so just flip a coin
-                    best_strat = random.randint(0,1)
-                elif prof_diff > 0:
-                    best_strat = 0
-                else:
-                    best_strat = 1
-
-                if best_strat == 1:
-                    # need to swap strats[0] and strats[1]
-                    tmp_strat = strats_sorted[0]
-                    strats_sorted[0] = strats_sorted[1]
-                    strats_sorted[1] = tmp_strat
-
-                # the sorted list of strats replaces the existing list
-                self.strats = strats_sorted
-
-        '''
-        eps = 0.1
-        if shc_algo == 'A':
-
-            if verbose:
-                # print('t=%f %s PRSH respond: shc_algo=%s eval_t=%f max_wait_t=%f' %
-                #     (time, self.tid, shc_algo, self.strat_eval_time, self.strat_wait_time))
-                dummy = 1
 
             # do we need to swap strategies?
             # this is based on time elapsed since last reset -- waiting for the current strategy to get a deal
@@ -2307,7 +2252,7 @@ class Trader_PRZI_SHC_Improve(Trader):
                           (time, self.tid, s, time_elapsed, self.strat_wait_time, new_strat))
 
             # code below here deals with creating a new set of k-1 mutants from the best of the k strats
-
+            
             for s in self.strats:
                 # assume that all strats have had long enough, and search for evidence to the contrary
                 all_old_enough = True
@@ -2316,24 +2261,36 @@ class Trader_PRZI_SHC_Improve(Trader):
                     all_old_enough = False
                     break
 
-
             if all_old_enough:           
-                strats_unsorted = self.strats 
-                strats_sorted = sorted(self.strats, key = lambda k: k['pps'], reverse = True)
-                # strats_sorted = self.strats     # use this as a control: unsorts the strats, gives pure random walk.
-                if (np.random.random()) < 0.1:
-                    self.strats[0] = random.choice(strats_unsorted)
-                else:
-                    self.strats[0] = strats_sorted[0]
-                                   
-                pre = 0
+                
+                for i, s in enumerate(self.strats):
+                    # update total times
+                    self.arms["total_times"] = self.arms["total_times"] + 1
+                    arm = round(s['stratval'], 2)
+                    if arm not in self.arms.keys(): # init arm
+                        self.arms[arm] = {"profit_sum":0, "test_times":0}
+                    # update sum
+                    self.arms[arm]["profit_sum"] = self.arms[arm]["profit_sum"] + s['profit']
+                    # update test times
+                    self.arms[arm]["test_times"] = self.arms[arm]["test_times"] + 1
+                    
+                    profit_sum = self.arms[arm]["profit_sum"]
+                    test_times = self.arms[arm]["test_times"]
+                    total_times = self.arms["total_times"]
+                    
+                    UCB_value = profit_sum / test_times + np.sqrt(2 * np.log(total_times) / test_times)
+                    
+                    self.strats[i]['profit'] = UCB_value
+                
+                strats_unsorted = self.strats
+                strats_sorted = sorted(self.strats, key = lambda k: k['profit'], reverse = True)
+                
+                self.strats = strats_sorted
 
                     # now replicate and mutate elite into all the other strats
-                for i in range(1, self.k):    # note range index starts at one not zero                            
-                            self.strats[i]['stratval'] = self.mutate_strat_4(self.strats[0]['stratval'],pre,i) 
-                            if i%2 ==0:
-                                pre = pre + 0.02*(i-1)
-                            else: pre = pre
+                #self.k =  self.k-15
+                for i in range(1,  self.k):    # note range index starts at one not zero                            
+                            self.strats[i]['stratval'] = self.mutate_strat_arm(self.strats[0]['stratval'], i) 
 
                             self.strats[i]['start_t'] = time
                             self.strats[i]['profit'] = 0.0
@@ -2433,7 +2390,7 @@ def populate_market(traders_spec, traders, shuffle, verbose):
         elif robottype == 'PRSH_M':
             return Trader_PRZI_SHC_M('PRSH_M', name, 0.00, 0)     
         elif robottype == 'PRSH_I':
-            return Trader_PRZI_SHC_Improve ('PRSH_M', name, 0.00, 0) 
+            return Trader_PRZI_SHC_Improve ('PRSH_I', name, 0.00, 0) 
         else:
             sys.exit('FATAL: don\'t know robot type %s\n' % robottype)
 

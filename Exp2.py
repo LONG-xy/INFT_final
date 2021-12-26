@@ -22,7 +22,7 @@ def n_runs(n, trial_id, start_time, end_time, traders_spec, order_sched):
         tdump.close()
     
 
-sellers_spec = [('PRSH', 5),('PRSH_M', 5)]
+sellers_spec = [('PRSH', 5),('PRSH_I', 5)]
 buyers_spec = sellers_spec
 traders_spec = {'sellers':sellers_spec, 'buyers':buyers_spec}
 
@@ -38,8 +38,8 @@ order_interval = 20
 order_sched = {'sup': supply_schedule, 'dem': demand_schedule,
                 'interval': order_interval, 'timemode': 'periodic'}
 
-trial_id = 'best_compare_origin_m4_0.14_k8'
-n_runs(200, trial_id, start_time, end_time, traders_spec, order_sched)
+trial_id = 'Improve'
+n_runs(300, trial_id, start_time, end_time, traders_spec, order_sched)
     
 
 

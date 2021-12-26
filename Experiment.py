@@ -47,7 +47,7 @@ def exp_start(Hill_Climbing_K):
     trial_id = 'best_m4_0.14_k' + str(Hill_Climbing_K)
 
 
-    n_runs(200, trial_id, start_time, end_time, traders_spec, order_sched)
+    n_runs(15, trial_id, start_time, end_time, traders_spec, order_sched)
     print(Hill_Climbing_K, " ended")
 
 
